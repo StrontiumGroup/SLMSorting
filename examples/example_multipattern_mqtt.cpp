@@ -21,10 +21,6 @@ PMG::PMG* pmg;
 struct mosquitto* MQTT_client;
 char payload[2000];
 
-std::vector<PMG::Spot> spots_window = {};
-std::vector<PMG::Spot> spots_gasket_5um = {};
-std::vector<PMG::Spot> spots_gasket_10um = {};
-std::vector<PMG::Spot> spots_gasket_15um = {};
 std::vector<PMG::Spot> spots_diamond = {};
 std::vector<PMG::Spot> spots_triangular = {};
 std::vector<PMG::Spot> spots_kagome = {};
@@ -39,7 +35,7 @@ void sort(std::string loaded_str) {
     std::cout << "Received message: " << loaded_str << std::endl;
 
     std::string target_str = "111111111";
-    pmg->load_end_geometry(spots_blockade);
+    pmg->load_end_geometry(spots_circle);
     unsigned int moves = pmg->sort_arbitrary_return(
         target_str,
         loaded_str,
@@ -47,14 +43,14 @@ void sort(std::string loaded_str) {
     );
     
     if (pmg->sorting_machine->number_loaded  >= pmg->sorting_machine->number_target) {
-        std::string path_to_end_img = "C:/Users/FastSLM/SLM/Masks/3x3_pairs2.bmp";
+        std::string path_to_end_img = "C:/Users/FastSLM/SLM/Masks/circle.bmp";
         pmg->load_mask_from_file(path_to_end_img);
         pmg->add_corrections_to_mask();
         pmg->display_mask_on_SLM();
         number_of_moves.emplace_back(moves);
     }
 
-    pmg->load_start_geometry(spots_blockade);
+    pmg->load_start_geometry(spots_circle);
 
     pmg->gpu_handler->initiate_spot_buffers_with_length(pmg->number_of_spots);
     pmg->copy_spots_to_buffers();

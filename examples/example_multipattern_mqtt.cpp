@@ -34,7 +34,7 @@ std::vector<unsigned int> number_of_moves = {};
 void sort(std::string loaded_str) {
     std::cout << "Received message: " << loaded_str << std::endl;
 
-    std::string target_str = "111111111";
+    std::string target_str = "1111111111111111";
     pmg->load_end_geometry(spots_circle);
     unsigned int moves = pmg->sort_arbitrary_return(
         target_str,

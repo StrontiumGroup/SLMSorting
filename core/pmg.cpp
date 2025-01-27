@@ -1926,15 +1926,9 @@ namespace PMG
         sorting_machine->parse_loaded_str(loaded_str);
 
         if (sorting_machine->number_loaded < sorting_machine->number_target) {
-            //std::cout << "Not enough atoms loaded" << std::endl;
+            std::cout << "Not enough atoms loaded" << std::endl;
             sorting_machine->number_of_steps = 1U;
             sorting_machine->number_turnoff_frames = 0U;
-            load_mask_from_file("../masks/black.bmp");
-            for (auto i=0; i < width * height; i++) {
-                mask_to_display_8bit[i] = mask_8bit[i];
-            }
-            //add_corrections_to_mask();
-            display_mask_on_SLM();
             return 0U;
         }
 

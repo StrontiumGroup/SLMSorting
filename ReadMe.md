@@ -31,5 +31,12 @@ gcc FILE.cpp ../core/*.cpp -DVKFFT_BACKEND=3 -lstdc++ -lOpenCl -lBlink_C_wrapper
 
 The Meadowlark SLM libraries are written such that the .dll files should be in the same folder as the executable. For the GPU code, one needs to pre-install VkFFT and OpenCL.
 
+For a walkthrough, please check out my personal path installing the files on a new device [here](./docs/GettingStarted.md). 
+
 ## Examples
-We provide a small example in `examples/example.cpp` of how to use the code. In our case, we had to communicate with the code during our experiment using MQTT. Again, this is very experiment specific and we have not strived to make an universally accessible example. The basics on how to call the classes in the `core`-folder are laid out, such that it should be possible to adapt to ones own experiment.
+We provide small examples in `examples/` of how to use the code. In our case, we had to communicate with the code during our experiment using MQTT. Again, this is very experiment specific and we have not strived to make an universally accessible example. The basics on how to call the classes in the `core`-folder are laid out, such that it should be possible to adapt to ones own experiment.
+
+- `example_noslm.cpp`: An example with no SLM commands. This is useful if no SLM is connected or the SDK is not installed on the PC. It sorts a 6x6 array into a 3x3 grid and stores patterns in between in the folder `/masks`. **Note** that you still need the `-lBlink_C_wrapper` tag and the Meadowlark `.dll`-files to compile the program.
+- `example_slm.cpp`: Does the same sorting but does not save the masks, but rather displays them on the SLM. 
+- `example_multipattern_noslm.cpp`: Another example without SLM commands, but this time sorting the 6x6 pattern into a 16-atom circle. It saves the holograms in the `/masks` folder.
+- `example_multipattern_slm.cpp`: Does not save but displays the holograms on the SLM.

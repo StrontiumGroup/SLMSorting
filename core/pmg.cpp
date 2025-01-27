@@ -1674,7 +1674,7 @@ namespace PMG
             //std::cout << "Not enough atoms loaded" << std::endl;
             sorting_machine->number_of_steps = 1U;
             sorting_machine->number_turnoff_frames = 0U;
-            load_mask_from_file("C:\\Users\\FastSLM\\SLM\\WFC Files\\blank.bmp");
+            load_mask_from_file("../masks/black.bmp");
             for (auto i=0; i < width * height; i++) {
                 mask_to_display_8bit[i] = mask_8bit[i];
             }
@@ -1747,7 +1747,7 @@ namespace PMG
             //std::cout << "Not enough atoms loaded" << std::endl;
             sorting_machine->number_of_steps = 1U;
             sorting_machine->number_turnoff_frames = 0U;
-            load_mask_from_file("C:\\Users\\FastSLM\\SLM\\WFC Files\\blank.bmp");
+            load_mask_from_file("../masks/black.bmp");
             for (auto i=0; i < width * height; i++) {
                 mask_to_display_8bit[i] = mask_8bit[i];
             }
@@ -1836,7 +1836,100 @@ namespace PMG
             //std::cout << "Not enough atoms loaded" << std::endl;
             sorting_machine->number_of_steps = 1U;
             sorting_machine->number_turnoff_frames = 0U;
-            load_mask_from_file("C:\\Users\\FastSLM\\SLM\\WFC Files\\blank.bmp");
+            load_mask_from_file("../masks/black.bmp");
+            for (auto i=0; i < width * height; i++) {
+                mask_to_display_8bit[i] = mask_8bit[i];
+            }
+            //add_corrections_to_mask();
+            display_mask_on_SLM();
+            return 0U;
+        }
+
+        // Begin with sorting.
+        sorting_machine->sort(
+            start_x_values, 
+            start_y_values,
+            end_x_values,
+            end_y_values,
+            std::max(width, height)
+        );
+        //std::cout << "Done sorting" << std::endl;
+
+        // Calculate number of steps (i.e. patterns) needed.
+        sorting_machine->calculate_maximal_movement(
+            start_x_values, 
+            start_y_values, 
+            end_x_values,
+            end_y_values,
+            std::max(width, height));
+        if (sorting_machine->number_loaded != sorting_machine->number_target) {
+            sorting_machine->number_turnoff_frames = 1U;
+        }
+        else {
+            sorting_machine->number_turnoff_frames = 0U;
+        }
+        
+        std::cout << "Need to sort " << sorting_machine->number_of_steps << " steps " <<std::endl;
+
+        switch (calculation_method) {
+            case 0:
+                //std::cout << "No calculation method selected" << std::endl;
+                break;
+            case 1:
+                calculate_sorting_arbitrary();
+                break;
+            default:
+                calculate_sorting_arbitrary();
+                break;
+        }
+
+        return sorting_machine->number_of_steps;
+    }
+
+    /*
+    * void PMG::sort_arbitrary_noslm()
+    *
+    * Given a loading_str and a target_str, this function will produce
+    * and display phasemasks to sort into the target string. It assumes
+    * the indices in the target_str correspond to the same traps as in 
+    * the loading_str. 
+    * 
+    * Does not use SLM. Just saves into `../masks/` folder.
+    * 
+    * The user has options for the different methods used: sorting_method, 
+    * calculation_method and pathing_method. Currently options are:
+    * 
+    * - sorting_method:
+    *      0.  Auto-detect
+    *      1.  Hungarian Algorithm
+    *      2.  Compression Algorithm
+    *      3.  Partitioned Compression Algorithm
+    * - calculation_method:
+    *      0.  None (just check sorting calculation)
+    *      1.  Sorting GS
+    * - pathing_method:
+    *      0.  Direct linear interpolation
+    */
+    unsigned int PMG::sort_arbitrary_return_noslm(
+        std::string_view target_str,
+        std::string_view loaded_str,
+        unsigned int sorting_method,
+        unsigned int calculation_method,
+        unsigned int pathing_method
+    ) {
+        // Set the right methods for the SortingMachine
+        sorting_machine->sorting_method = sorting_method;
+        sorting_machine->pathing_method = pathing_method;
+
+        // Parse strings from the AndorServer
+        sorting_machine->parse_target_str(target_str);
+        sorting_machine->parse_loaded_str(loaded_str);
+
+        if (sorting_machine->number_loaded < sorting_machine->number_target) {
+            //std::cout << "Not enough atoms loaded" << std::endl;
+            sorting_machine->number_of_steps = 1U;
+            sorting_machine->number_turnoff_frames = 0U;
+            load_mask_from_file("../masks/black.bmp");
             for (auto i=0; i < width * height; i++) {
                 mask_to_display_8bit[i] = mask_8bit[i];
             }
@@ -1885,4 +1978,5 @@ namespace PMG
 
         return sorting_machine->number_of_steps;
     }
+
 };

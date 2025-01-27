@@ -224,6 +224,13 @@ namespace PMG {
                 unsigned int calculation_method = 0,
                 unsigned int pathing_method = 0
             );
+            unsigned int sort_arbitrary_return_noslm(
+                std::string_view target_str,
+                std::string_view loaded_str,
+                unsigned int sorting_method = 0,
+                unsigned int calculation_method = 0,
+                unsigned int pathing_method = 0
+            );
             void test_sort(
                 std::string_view target_str,
                 std::string_view loaded_str

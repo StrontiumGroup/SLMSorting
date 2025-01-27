@@ -183,6 +183,7 @@ namespace PMG {
             void run_GSW_loop();
             void calculate_sorting_shortcut();
             void calculate_sorting_arbitrary();
+            void calculate_sorting_arbitrary_noslm();
             TestResult test(
                 std::string_view loaded_str,
                 std::string_view target_str,

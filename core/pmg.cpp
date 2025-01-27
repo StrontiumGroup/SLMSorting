@@ -1320,6 +1320,69 @@ namespace PMG
         clFinish(*queue_ptr);
     }
 
+    /* 
+    * PMG::calculate_sorting_shortcut()
+    *
+    * Internal function used for quickly computing the next hologram and displaying it 
+    * on the SLM. Does not use the SLM so for debugging only.
+    * */
+    void PMG::calculate_sorting_arbitrary_noslm() {
+        cl_event wait_list_spots_transfer[5] = {
+            gpu_handler->event_list[INDEX_WRITE_X_BUFFER],
+            gpu_handler->event_list[INDEX_WRITE_Y_BUFFER],
+            gpu_handler->event_list[INDEX_WRITE_AMPLITUDE_BUFFER],
+            gpu_handler->event_list[INDEX_WRITE_TWEEZER_PHASE_BUFFER],
+            gpu_handler->event_list[INDEX_WRITE_SHOULD_BE_USED_BUFFER]
+        };
+
+        cl_event wait_list_spots_calculation[2] = {
+            gpu_handler->event_list[INDEX_KNL_RESET_FIELD],
+            gpu_handler->event_list[INDEX_HOST_GET_POSITIONS]
+        };
+
+        bool updated;
+        for (auto k = 1; k <= sorting_machine->number_of_steps + sorting_machine->number_turnoff_frames; k++) {
+            gpu_handler->run_knl_reset_field(false);
+            clEnqueueBarrierWithWaitList(*queue_ptr, 1, &gpu_handler->event_list[INDEX_KNL_RESET_FIELD], &gpu_handler->event_list[INDEX_BARRIER]);
+           
+            clSetUserEventStatus(gpu_handler->event_list[INDEX_HOST_GET_POSITIONS], CL_SUBMITTED);
+            updated = sorting_machine->get_next_positions(
+                k, x_values, y_values, amplitude_values, psi_values, should_be_used, 
+                start_x_values, start_y_values, start_amplitude_values, start_phase_values, 
+                end_x_values, end_y_values, end_amplitude_values, end_phase_values, 
+                std::max(width, height)
+            );
+
+            if (!updated) { break; }
+            clSetUserEventStatus(gpu_handler->event_list[INDEX_HOST_GET_POSITIONS], CL_COMPLETE);
+
+            clEnqueueBarrierWithWaitList(*queue_ptr, 2, wait_list_spots_calculation, &gpu_handler->event_list[INDEX_BARRIER]);
+            copy_spots_to_buffers(true);            
+            clEnqueueBarrierWithWaitList(*queue_ptr, 5, wait_list_spots_transfer, &gpu_handler->event_list[INDEX_BARRIER]);
+
+            gpu_handler->run_knl_apply_constraints_GS_locked(false);
+            clEnqueueBarrierWithWaitList(*queue_ptr, 1, &gpu_handler->event_list[INDEX_KNL_APPLY_CONSTRAINTS_GS_LOCKED], &gpu_handler->event_list[INDEX_BARRIER]);
+
+            gpu_handler->run_iFFT(false);
+            clEnqueueBarrierWithWaitList(*queue_ptr, 1, &gpu_handler->event_list[INDEX_KNL_APPLY_IFFT], &gpu_handler->event_list[INDEX_BARRIER]);
+
+            gpu_handler->run_knl_get_phase_with_corrections(false);
+            clEnqueueBarrierWithWaitList(*queue_ptr, 1, &gpu_handler->event_list[INDEX_KNL_GET_PHASE], &gpu_handler->event_list[INDEX_BARRIER]);
+
+            get_mask_from_buffer(mask_to_display_8bit);
+
+            char save_path[500];
+            remove_corrections_from_mask();
+            snprintf(save_path, 500, "../masks/%03d.bmp", k);
+            save_mask_to_file(save_path);
+
+
+            if (k == sorting_machine->number_of_steps + sorting_machine->number_turnoff_frames) break;
+        }
+
+        clFinish(*queue_ptr);
+    }
+
     /*
      * PMG::test()
      *
@@ -1813,10 +1876,10 @@ namespace PMG
                 //std::cout << "No calculation method selected" << std::endl;
                 break;
             case 1:
-                calculate_sorting_arbitrary();
+                calculate_sorting_arbitrary_noslm();
                 break;
             default:
-                calculate_sorting_arbitrary();
+                calculate_sorting_arbitrary_noslm();
                 break;
         }
 

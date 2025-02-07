@@ -90,7 +90,6 @@ namespace PMG {
         unsigned int dimension
     ) {
         int return_code;
-        sorting_method = SORTING_METHOD_HUNGARIAN;
         switch (sorting_method) {
             case SORTING_METHOD_AUTO:  // Auto-detect
                 if (number_target > 300U) {

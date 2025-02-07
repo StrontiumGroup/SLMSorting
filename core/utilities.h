@@ -25,7 +25,7 @@
 #include <thread>
 
 // Defines the maximum number of spots and thus length of reserved arrays.
-#define MAX_NUMBER_SPOTS 3000
+#define MAX_NUMBER_SPOTS 30000
 #define MAX_NUMBER_EVENTS 100
 #define MAX_NUMBER_LAYER 200
 

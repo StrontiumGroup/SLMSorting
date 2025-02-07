@@ -1371,10 +1371,10 @@ namespace PMG
 
             get_mask_from_buffer(mask_to_display_8bit);
 
-            char save_path[500];
-            remove_corrections_from_mask();
-            snprintf(save_path, 500, "../masks/%03d.bmp", k);
-            save_mask_to_file(save_path);
+            //char save_path[500];
+            //remove_corrections_from_mask();
+            //snprintf(save_path, 500, "../masks/%03d.bmp", k);
+            //save_mask_to_file(save_path);
 
 
             if (k == sorting_machine->number_of_steps + sorting_machine->number_turnoff_frames) break;
@@ -1416,26 +1416,54 @@ namespace PMG
         unsigned int calculation_method,
         unsigned int pathing_method
     ) {
+        TestResult test_result;
+
         // Initiate time points for the test.
         std::chrono::steady_clock::time_point time_end_sorting;
         std::chrono::steady_clock::time_point time_end_calculation;
         std::chrono::steady_clock::time_point time_start_test = std::chrono::steady_clock::now();
 
-        // Set the right methods for the SortingMachine
-        sorting_machine->sorting_method = sorting_method;
-        sorting_machine->pathing_method = pathing_method;
-
         // Parse strings from the AndorServer
         sorting_machine->parse_target_str(target_str);
         sorting_machine->parse_loaded_str(loaded_str);
 
+        if (sorting_machine->number_loaded < sorting_machine->number_target) {
+            //std::cout << "Not enough atoms loaded" << std::endl;
+            sorting_machine->number_of_steps = 1U;
+            sorting_machine->number_turnoff_frames = 0U;
+            load_mask_from_file("../masks/black.bmp");
+            for (auto i=0; i < width * height; i++) {
+                mask_to_display_8bit[i] = mask_8bit[i];
+            }
+            //add_corrections_to_mask();
+            return test_result;
+        }
+
         // Begin with sorting.
-        sorting_machine->sort(start_x_values, start_y_values, std::max(width, height));
+        sorting_machine->sort(
+            start_x_values, 
+            start_y_values,
+            end_x_values,
+            end_y_values,
+            std::max(width, height)
+        );
         //std::cout << "Done sorting" << std::endl;
 
         // Calculate number of steps (i.e. patterns) needed.
-        sorting_machine->calculate_maximal_movement(start_x_values, start_y_values, std::max(width, height));
-        sorting_machine->number_turnoff_frames = 1;
+        sorting_machine->calculate_maximal_movement(
+            start_x_values, 
+            start_y_values, 
+            end_x_values,
+            end_y_values,
+            std::max(width, height));
+        if (sorting_machine->number_loaded != sorting_machine->number_target) {
+            sorting_machine->number_turnoff_frames = 1U;
+        }
+        else {
+            sorting_machine->number_turnoff_frames = 0U;
+        }
+        
+        std::cout << "Need to sort " << sorting_machine->number_of_steps << " steps " <<std::endl;
 
         time_end_sorting = std::chrono::steady_clock::now();
 
@@ -1444,17 +1472,16 @@ namespace PMG
                 //std::cout << "No calculation method selected" << std::endl;
                 break;
             case 1:
-                calculate_sorting_shortcut();
+                calculate_sorting_arbitrary_noslm();
                 break;
             default:
-                calculate_sorting_shortcut();
+                calculate_sorting_arbitrary_noslm();
                 break;
         }
 
         time_end_calculation = std::chrono::steady_clock::now();
 
         // Calculate results.
-        TestResult test_result;
         test_result.duration_sorting = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(time_end_sorting - time_start_test).count() / 1000000.;
         test_result.duration_calculation = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(time_end_calculation - time_end_sorting).count() / 1000000.;
         test_result.duration_total = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(time_end_calculation - time_start_test).count() / 1000000.;

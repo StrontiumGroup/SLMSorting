@@ -1,0 +1,1036 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyslmsorting &mdash; pySLMSorting 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            pySLMSorting
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kernels.html">Kernels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Example.html">Example Notebook</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pySLMSorting</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyslmsorting</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyslmsorting</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">pySLMSorting</span>
+
+<span class="sd">Module created for SLM sorting code as presented in:</span>
+
+<span class="sd">* https://arxiv.org/abs/2501.01391</span>
+
+<span class="sd">Uses OpenCl and pyVKFFT for fast computation of holograms.</span>
+<span class="sd">Note that the code only calculates holograms and does not</span>
+<span class="sd">take care of e.g. rearranging tweezers. The user has to do</span>
+<span class="sd">that separately. See for example, Example.ipynb.</span>
+
+<span class="sd">author: Ivo Knottnerus</span>
+<span class="sd">lastedit: 17/04/2025</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="nb">abs</span><span class="p">,</span> <span class="nb">sum</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">amax</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyopencl</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyopencl.array</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cla</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopencl.clrandom</span><span class="w"> </span><span class="kn">import</span> <span class="n">rand</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopencl.elementwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementwiseKernel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyvkfft.opencl</span><span class="w"> </span><span class="kn">import</span> <span class="n">VkFFTApp</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<div class="viewcode-block" id="roll">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.roll">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">roll</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Moves a spot coordinate to the rim of the coordinates.</span>
+
+<span class="sd">    Acts as an FFTShift in coordinate space.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">%</span> <span class="n">dim</span></div>
+
+
+<div class="viewcode-block" id="unroll">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.unroll">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">unroll</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The inverse of roll().</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">-</span> <span class="n">dim</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+
+<div class="viewcode-block" id="GPUHandler">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.GPUHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GPUHandler</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class that handles all the GPU kernel executions.</span>
+
+<span class="sd">    Houses the OpenCl variables and buffers. It also contains</span>
+<span class="sd">    the kernels and the VkFFTApp to perform FFTs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cq</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_intensity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_target</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_update_target</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_change_amps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_assemble_fields</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_phase</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_set_field_from_spots</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_update_field_shortcut</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer_status</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_buf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui_buf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_buf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_buf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_intensity_buf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intensity_buf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_phase_buf</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="mi">1000</span>
+    
+<div class="viewcode-block" id="GPUHandler.initOpenCl">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.GPUHandler.initOpenCl">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initOpenCl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_output</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initiates the OpenCl variables and VKFFTApp.</span>
+
+<span class="sd">        Creates the context, selects a device (can vary per computer) and </span>
+<span class="sd">        command queue for OpenCl. Also loads the pyVkFFT VKFFTApp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create some context on the first available GPU</span>
+        <span class="k">if</span> <span class="s1">&#39;PYOPENCL_CTX&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="n">ctx</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">create_some_context</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ctx</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1"># Find the first OpenCL GPU available and use it, unless</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">cl</span><span class="o">.</span><span class="n">get_platforms</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">get_devices</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">type</span> <span class="o">&amp;</span> <span class="n">cl</span><span class="o">.</span><span class="n">device_type</span><span class="o">.</span><span class="n">GPU</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">do_output</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Selected device: &quot;</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="n">ctx</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Context</span><span class="p">(</span><span class="n">devices</span><span class="o">=</span><span class="p">(</span><span class="n">d</span><span class="p">,))</span>
+                    <span class="c1">#break</span>
+                <span class="k">if</span> <span class="n">ctx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cq</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">CommandQueue</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">VkFFTApp</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span>
+            <span class="n">queue</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span>
+            <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">norm</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">buildKernels</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GPUHandler.initBuffers">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.GPUHandler.initBuffers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initBuffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the buffers for the calculation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Some useful memory on the GPU.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">Ui</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer_status</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="GPUHandler.buildKernels">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.GPUHandler.buildKernels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">buildKernels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compiles the program with the kernels.</span>
+
+<span class="sd">        For a full description of the kernels, check the documentation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prg</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">Program</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">,</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            #pragma OPENCL EXTENSION cl_khr_fp64 : enable</span>
+<span class="sd">            #define PYOPENCL_DEFINE_CDOUBLE</span>
+<span class="sd">            #define SLM_WIDTH &quot;&quot;&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">width</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            #define SLM_HEIGHT &quot;&quot;&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">height</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            #include &lt;pyopencl-complex.h&gt;</span>
+<span class="s2">            __kernel void get_intensity(</span>
+<span class="s2">                __global float *intensity,</span>
+<span class="s2">                __global int *x,</span>
+<span class="s2">                __global int *y,</span>
+<span class="s2">                __global cfloat_t *field</span>
+<span class="s2">            )</span>
+<span class="s2">            {</span>
+<span class="s2">                int i = get_global_id(0);</span>
+
+<span class="s2">                intensity[i] = cfloat_abs_squared(field[(int) y[i]*SLM_WIDTH + x[i]]);</span>
+<span class="s2">            }</span>
+
+<span class="s2">            __kernel void get_target(</span>
+<span class="s2">                __global int *x,</span>
+<span class="s2">                __global int *y,</span>
+<span class="s2">                __global float *target_intensity,</span>
+<span class="s2">                __global float *target</span>
+<span class="s2">            ) {</span>
+<span class="s2">                int i = get_global_id(0);</span>
+<span class="s2">                int size = get_global_size(0);</span>
+
+<span class="s2">                target[(int) (y[i]*SLM_WIDTH + x[i])] = target_intensity[i];</span>
+<span class="s2">            }</span>
+
+<span class="s2">            __kernel void set_field_from_spots(</span>
+<span class="s2">                __global float *target_phase, </span>
+<span class="s2">                __global float *intensity, </span>
+<span class="s2">                __global int *x, </span>
+<span class="s2">                __global int *y,</span>
+<span class="s2">                __global cfloat_t *field</span>
+
+<span class="s2">            ){</span>
+<span class="s2">                size_t i = get_global_id(0);</span>
+<span class="s2">                size_t size = get_global_size(0);</span>
+
+<span class="s2">                field[(int) (y[i]*SLM_WIDTH + x[i])] = cfloat_new( </span>
+<span class="s2">                    sqrt(intensity[i]) * cos(target_phase[i]), </span>
+<span class="s2">                    sqrt(intensity[i]) * sin(target_phase[i]) </span>
+<span class="s2">                );</span>
+
+<span class="s2">            }</span>
+
+<span class="s2">            __kernel void update_target(</span>
+<span class="s2">                __global int *x,</span>
+<span class="s2">                __global int *y,</span>
+<span class="s2">                __global float *target_intensity,</span>
+<span class="s2">                __global float *intensity,</span>
+<span class="s2">                __global float *target</span>
+<span class="s2">            ){</span>
+<span class="s2">                int i = get_global_id(0);</span>
+
+<span class="s2">                float mean_val = 0;</span>
+<span class="s2">                int size = get_global_size(0);</span>
+<span class="s2">                for (int j = 0; j &lt; size; j++)</span>
+<span class="s2">                    mean_val += sqrt((intensity[j] / target_intensity[j])) / size;</span>
+
+<span class="s2">                if (intensity[i] != 0. &amp;&amp; target_intensity[i] != 0.)</span>
+<span class="s2">                    target[(int) (y[i]*SLM_WIDTH + x[i])] *= (mean_val / sqrt(intensity[i] / target_intensity[i]));</span>
+<span class="s2">            }</span>
+
+<span class="s2">            __kernel void update_field_shortcut(</span>
+<span class="s2">                __global float *target_phase, </span>
+<span class="s2">                __global float *intensity, </span>
+<span class="s2">                __global int *x, </span>
+<span class="s2">                __global int *y,</span>
+<span class="s2">                __global cfloat_t *field</span>
+
+<span class="s2">            ){</span>
+<span class="s2">                size_t i = get_global_id(0);</span>
+
+<span class="s2">                // the factor 1000 is a dirty trick.</span>
+<span class="s2">                field[(int) (y[i]*SLM_WIDTH + x[i])] = cfloat_new( </span>
+<span class="s2">                    10000. * sqrt(intensity[i]) * cos(target_phase[i]), </span>
+<span class="s2">                    10000. * sqrt(intensity[i]) * sin(target_phase[i]) </span>
+<span class="s2">                );</span>
+
+<span class="s2">            }</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_change_amps</span> <span class="o">=</span> <span class="n">ElementwiseKernel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">,</span>
+            <span class="s2">&quot;cfloat_t *field, float *intensity&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            float value = cfloat_abs(field[i]);</span>
+<span class="sd">            if (value != 0.) {</span>
+<span class="sd">                field[i] = cfloat_mulr(field[i], sqrt(intensity[i]) / value);</span>
+<span class="sd">            }</span>
+<span class="sd">            else {</span>
+<span class="sd">                field[i] = cfloat_addr(field[i], sqrt(intensity[i]));</span>
+<span class="sd">            }</span>
+
+<span class="sd">            &quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;knl_change_amps&quot;</span><span class="p">,</span>
+            <span class="n">preamble</span><span class="o">=</span><span class="s2">&quot;#define PYOPENCL_DEFINE_CDOUBLE //#include &lt;pyopencl-complex.h&gt;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_assemble_field</span> <span class="o">=</span> <span class="n">ElementwiseKernel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">,</span>
+            <span class="s2">&quot;cfloat_t *field, float *intensity, float *phase&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            field[i] = cfloat_new(sqrt(intensity[i]) * cos(phase[i]), sqrt(intensity[i]) * sin(phase[i]));</span>
+<span class="sd">            &quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;knl_assemble_field&quot;</span><span class="p">,</span>
+            <span class="n">preamble</span><span class="o">=</span><span class="s2">&quot;#define PYOPENCL_DEFINE_CDOUBLE //#include &lt;pyopencl-complex.h&gt;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_phase</span> <span class="o">=</span> <span class="n">ElementwiseKernel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="p">,</span>
+            <span class="s2">&quot;float *phase, cfloat_t *field&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            phase[i] = atan2(cfloat_imag(field[i]), cfloat_real(field[i]));</span>
+<span class="sd">            &quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;knl_get_phase&quot;</span><span class="p">,</span>
+            <span class="n">preamble</span><span class="o">=</span><span class="s2">&quot;#define PYOPENCL_DEFINE_CDOUBLE //#include &lt;pyopencl-complex.h&gt;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Compile the kernels for later use.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_target</span> <span class="o">=</span> <span class="n">prg</span><span class="o">.</span><span class="n">get_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_update_target</span> <span class="o">=</span> <span class="n">prg</span><span class="o">.</span><span class="n">update_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_intensity</span> <span class="o">=</span> <span class="n">prg</span><span class="o">.</span><span class="n">get_intensity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_set_field_from_spots</span> <span class="o">=</span> <span class="n">prg</span><span class="o">.</span><span class="n">set_field_from_spots</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_update_field_shortcut</span> <span class="o">=</span> <span class="n">prg</span><span class="o">.</span><span class="n">update_field_shortcut</span></div>
+
+
+<div class="viewcode-block" id="GPUHandler.copySpotsToBuffers">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.GPUHandler.copySpotsToBuffers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copySpotsToBuffers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">used_spots</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copies the coordinates, intensity and phase of given spots to the GPU.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="n">used_spots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="n">used_spots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_intensity_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="n">used_spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="n">used_spots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_phase_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="n">used_spots</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intensity_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="p">(</span><span class="n">used_spots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],),</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+    
+<div class="viewcode-block" id="GPUHandler.releaseBuffers">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.GPUHandler.releaseBuffers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">releaseBuffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clears the buffers. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_intensity_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intensity_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_phase_buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer_status</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="GPUHandler.calculateGSW">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.GPUHandler.calculateGSW">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculateGSW</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">used_spots</span><span class="p">,</span> <span class="n">start_hologram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_delta</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                    <span class="n">dev_delta</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes a hologram to produce the tweezer pattern given in used_spots.</span>
+
+<span class="sd">        Uses the weighed Gerchberg-Saxton algorithm, described in e.g.:</span>
+<span class="sd">        </span>
+<span class="sd">        * https://doi.org/10.1364/OE.15.001913</span>
+<span class="sd">        * https://doi.org/10.1364/oe.27.002184</span>
+<span class="sd">        * https://doi.org/10.1364/ol.44.003178</span>
+
+<span class="sd">        The function takes a potential starting hologram in `start_hologram`, which</span>
+<span class="sd">        can be used as the starting point of the iteration. If None (default), the </span>
+<span class="sd">        hologram in the parent PMG instance will be used. If this is also None, a</span>
+<span class="sd">        hologram will be made using the presented `used_spots`. This is the starting</span>
+<span class="sd">        point of the GSW algorithm.</span>
+
+<span class="sd">        In the loop of the GSW algorithm, an FFT is performed and at the coordinates </span>
+<span class="sd">        of the `used_spots` the intensity is compared to the target intensity. If </span>
+<span class="sd">        this matches, within conditions set by `max_delta`, the loop is terminated. </span>
+<span class="sd">        Alternatively, is the change in subsequent iterations is small compared to </span>
+<span class="sd">        `dev_delta`, the loop stops. Last case to terminate is reaching the </span>
+<span class="sd">        `max_iter`. </span>
+
+<span class="sd">        Function can plot and save the hologram directly.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        used_spots : np.ndarray</span>
+<span class="sd">            Array of the coordinates, intensities phases of the desired pattern.</span>
+<span class="sd">        start_hologram : np.ndarray or NoneType</span>
+<span class="sd">            Array with the start hologram for the iteration. Defaults to None.</span>
+<span class="sd">        max_delta : float</span>
+<span class="sd">            Maximal discrepancy in intensity allowed to stop loop. Defaults to </span>
+<span class="sd">            1e-3.</span>
+<span class="sd">        dev_delta : float</span>
+<span class="sd">            Minimial deviation between subsequent iterations to not stop loop.</span>
+<span class="sd">            Defaults to 1e-3.</span>
+<span class="sd">        show_plot : bool</span>
+<span class="sd">            Whether to show a plot of the hologram and the expected intensity.</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        save_path : string</span>
+<span class="sd">            If presented a non-zero length string, this will be used as the path</span>
+<span class="sd">            to save the hologram as an 8-bit bitmap. Defaults to &quot;&quot;.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        hologram : np.ndarray</span>
+<span class="sd">            Received hologram.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># We first determine the target intensity distribution.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_target</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_intensity_buf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_intensity_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check if a hologram was presented or still in parent memory.</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">start_hologram</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">hologram</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">start_hologram</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="n">start_hologram</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">hologram</span><span class="p">)</span>
+
+            <span class="c1"># Calculate the field at SLM.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">knl_assemble_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui_buf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Else, reset field buffer and just place the spots.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>         
+            <span class="bp">self</span><span class="o">.</span><span class="n">knl_set_field_from_spots</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_phase_buf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initial_phase_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">target_intensity_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="o">.</span><span class="n">data</span>
+            <span class="p">)</span>
+
+        <span class="n">locked</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">prev_delta</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">it</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">:</span>
+            <span class="c1"># Start by getting metrics on current performance.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">it</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_intensity</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">intensity_buf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">intensity_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">y_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="o">.</span><span class="n">data</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+                
+                <span class="c1"># Then update the target using the weights.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knl_update_target</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">intensity_buf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">y_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">target_intensity_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">intensity_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">target_buf</span><span class="o">.</span><span class="n">data</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+                <span class="c1"># Calculate metrics. I don&#39;t know if we can speed this up further.</span>
+                <span class="c1"># On home-pc, takes ~1ms for me.</span>
+                <span class="n">intensities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensity_buf</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                <span class="n">mean_intensities</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">intensities</span><span class="p">)</span>
+                <span class="n">delta</span> <span class="o">=</span> <span class="n">amax</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">used_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">intensities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">mean_intensities</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">used_spots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Change the amplitudes of the field at focus with our constraints.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">knl_change_amps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_buf</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+
+            <span class="c1"># Calculate using GPU to field at SLM.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+            <span class="c1"># See if we should stop because we had hit the metrics</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">it</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="n">max_delta</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">it</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="mf">0.01</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span>
+                    <span class="n">prev_delta</span> <span class="o">-</span> <span class="n">delta</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">dev_delta</span><span class="p">)</span> <span class="ow">or</span> <span class="n">it</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="c1"># Get field at SLM and calculate back to focus.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">knl_change_amps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui_buf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+            <span class="c1"># Save performance for the next iteration and up counter.</span>
+            <span class="n">prev_delta</span> <span class="o">=</span> <span class="n">delta</span>
+            <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Store phase in the CPU memory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_phase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">)</span>
+        <span class="n">hologram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">hologram</span></div>
+
+
+<div class="viewcode-block" id="GPUHandler.calculateSingle">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.GPUHandler.calculateSingle">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculateSingle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes a single iFFT of a target electric field.</span>
+
+<span class="sd">        First sets the intended electric field that is given by the buffers</span>
+<span class="sd">        in the GPU memory. Then performs a single iFFT and returns the phase.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        hologram : np.ndarray</span>
+<span class="sd">            The received hologram.</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_update_field_shortcut</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initial_phase_buf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initial_phase_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_intensity_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_buf</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="o">.</span><span class="n">data</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knl_get_phase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_buf</span><span class="p">)</span>
+
+        <span class="c1"># Perhaps the cleanest would be to do another FFT here,</span>
+        <span class="c1"># so that our target field is almost all zeros.</span>
+
+        <span class="n">hologram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase_buf</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">hologram</span></div>
+</div>
+
+
+<div class="viewcode-block" id="PhaseMaskGenerator">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PhaseMaskGenerator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Class used for creation of phase masks and iteration of them.</span>
+
+<span class="sd">    More complete explanation follows later.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the PMG with dimensions width x height.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fft_dimension</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+
+        <span class="c1"># Initialize the arrays with the correct data types.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fft_dimension</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span><span class="p">[</span>
+            <span class="nb">int</span><span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span> <span class="o">-</span> <span class="n">height</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span> <span class="nb">int</span><span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span> <span class="o">+</span> <span class="n">height</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span> <span class="nb">int</span><span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span><span class="n">height</span> <span class="o">*</span> <span class="n">width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hologram</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span> <span class="o">=</span> <span class="n">GPUHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">initOpenCl</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PhaseMaskGenerator.addSpot">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.addSpot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addSpot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">psi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a spot to the np.array containing the spots.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : np.float32</span>
+<span class="sd">            x-coordinate, should be integer</span>
+<span class="sd">        y : np.float32</span>
+<span class="sd">            y-coordinate, should be integer</span>
+<span class="sd">        z : np.float32</span>
+<span class="sd">            z-coordinate, unused for now</span>
+<span class="sd">        i : np.float32</span>
+<span class="sd">            relative target intensity. Default: 1.</span>
+<span class="sd">        psi : NoneType or np.float32</span>
+<span class="sd">            optical phase of the tweezer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">psi</span><span class="p">:</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[[</span><span class="n">x</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">y</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">psi</span><span class="p">]],</span> 
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">double</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">spot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">spot</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">==</span> <span class="n">spot</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">z</span> <span class="o">==</span> <span class="n">spot</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                    <span class="n">double</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">double</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">,</span> 
+                        <span class="p">[</span><span class="n">x</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">y</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">psi</span><span class="p">]</span>
+                    <span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="PhaseMaskGenerator.deleteSpot">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.deleteSpot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">deleteSpot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes the spot at index i.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">,</span>
+            <span class="n">i</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PhaseMaskGenerator.getSpots">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.getSpots">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getSpots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the spots at the locations with the optical center in the middle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">return_spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">return_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">unroll</span><span class="p">(</span><span class="n">return_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+            <span class="n">return_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">unroll</span><span class="p">(</span><span class="n">return_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">return_spots</span></div>
+
+    
+<div class="viewcode-block" id="PhaseMaskGenerator.sortSpots">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.sortSpots">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sortSpots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sorts the spots from low to high coordinates.</span>
+
+<span class="sd">        This implementation is quite stupid in complexity, but N is </span>
+<span class="sd">        usually quite small (max ~1000).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">return_spots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSpots</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">[</span><span class="n">return_spots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
+        <span class="n">return_spots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSpots</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">[</span><span class="n">return_spots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="PhaseMaskGenerator.calculateGSW">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.calculateGSW">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculateGSW</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_hologram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_delta</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                    <span class="n">min_eff</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dev_delta</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">dev_eff</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+                    <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uses the weighted GS algorithm.</span>
+
+<span class="sd">        This version uses fft to quickly compute 2D patterns. </span>
+<span class="sd">        See https://doi.org/10.1364/OL.44.003178 for the algorithm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        start_hologram : np.ndarray</span>
+<span class="sd">            A hologram that is used as a starting point for the calculation.</span>
+<span class="sd">            If None, first the hologram in the memory </span>
+<span class="sd">            (`PhaseMaskGenerator.hologram`) will be used and if this is also</span>
+<span class="sd">            None, a random phase is assigned to each tweezer as a starting</span>
+<span class="sd">            point.</span>
+<span class="sd">        max_delta : float</span>
+<span class="sd">            If deviation is below this number, the iteration will stop</span>
+<span class="sd">        min_eff : float</span>
+<span class="sd">            Minimally required efficiency in the sum of the tweezers</span>
+<span class="sd">        dev_delta : float</span>
+<span class="sd">            Minimal change in delta that is still considered as improvment</span>
+<span class="sd">        dev_eff : float</span>
+<span class="sd">            Minimal change in efficiency for improvement</span>
+<span class="sd">        show_plot : bool</span>
+<span class="sd">            Whether to display a plot of the hologram and the expected</span>
+<span class="sd">            tweezer pattern</span>
+<span class="sd">        save_path : string</span>
+<span class="sd">            If presented with a string, the hologram is stored at the</span>
+<span class="sd">            save_path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># No spots are defined, so we better stop the calculation.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">used_spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">buffer_status</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">initBuffers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">copySpotsToBuffers</span><span class="p">(</span><span class="n">used_spots</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hologram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">calculateGSW</span><span class="p">(</span>
+            <span class="n">used_spots</span><span class="p">,</span>
+            <span class="n">start_hologram</span><span class="p">,</span> 
+            <span class="n">max_delta</span><span class="p">,</span>
+            <span class="n">min_eff</span><span class="p">,</span>
+            <span class="n">dev_delta</span><span class="p">,</span>
+            <span class="n">dev_eff</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">releaseBuffers</span><span class="p">()</span>
+
+        <span class="c1"># Optional function to see the results.</span>
+        <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+
+        <span class="c1"># Optional function to save hologram.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hologram</span></div>
+
+
+<div class="viewcode-block" id="PhaseMaskGenerator.calculateSingle">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.calculateSingle">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculateSingle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates only a single FFT from the currently used spots.</span>
+
+<span class="sd">        This is useful for the linear interpolation rearrangement</span>
+<span class="sd">        when all the coordinates and optical phases of the tweezers</span>
+<span class="sd">        are known. The function copies this information to the GPU</span>
+<span class="sd">        buffers and then runs a single FFT back and retrieves the </span>
+<span class="sd">        hologram.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show_plot : bool</span>
+<span class="sd">            Whether a plot is displayed of the hologram and the expected</span>
+<span class="sd">            pattern when using the illumination in the memory. Defaults</span>
+<span class="sd">            to False.</span>
+<span class="sd">        save_path : string</span>
+<span class="sd">            Defaults to &quot;&quot;. If a non-zero length string is presented, </span>
+<span class="sd">            the hologram will be saved to that path.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self.hologram : np.ndarray</span>
+<span class="sd">            Array of floats containing the hologram that is calculated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># No spots are defined, so we better stop the calculation.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">used_spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">buffer_status</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">initBuffers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">copySpotsToBuffers</span><span class="p">(</span><span class="n">used_spots</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hologram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">calculateSingle</span><span class="p">()</span>
+
+        <span class="c1"># Optional function to see the results.</span>
+        <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+
+        <span class="c1"># Optional function to save hologram.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hologram</span></div>
+
+
+
+<div class="viewcode-block" id="PhaseMaskGenerator.display">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.display">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Displays the current hologram and a projected pattern.</span>
+
+<span class="sd">        Uses illumination pattern in the memory to calculate a single </span>
+<span class="sd">        forward FFT to get the expected tweezer pattern from given hologram.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hologram</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;twilight_shifted&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Hologram&quot;</span><span class="p">)</span>
+
+        <span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
+            <span class="nb">abs</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">hologram</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">),</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span>
+        <span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">50</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">50</span><span class="p">])</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">50</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">50</span><span class="p">])</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+    
+<div class="viewcode-block" id="PhaseMaskGenerator.save">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">savepath</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts the hologram to 8bit and saves it to savepath.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        savepath : string</span>
+<span class="sd">            String where to save the hologram.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hologram_8bit</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">hologram</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">%</span> <span class="mi">256</span>
+        <span class="n">phi_im</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">hologram_8bit</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+        <span class="n">phi_im</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">savepath</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PhaseMaskGenerator.loadFromHologram">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.loadFromHologram">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">loadFromHologram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hologram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">intensity_threshold</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads the spots from the given hologram.</span>
+
+<span class="sd">        Computes using the current illumination pattern a predicted</span>
+<span class="sd">        intensity and takes the top n_spots spots out of this. If </span>
+<span class="sd">        these are bigger than a set threshold, the function extracts</span>
+<span class="sd">        all values from the calculation and stores this as a spot.</span>
+
+<span class="sd">        This detection leaves the spots unsorted, so one needs to resort</span>
+<span class="sd">        afterwards. We do that here from low to high values in the</span>
+<span class="sd">        unrolled coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hologram : np.array of floats or None</span>
+<span class="sd">            Phase mask to be used. If None, the mask in the</span>
+<span class="sd">            PMG memory will be used if available</span>
+<span class="sd">        n_spots : int</span>
+<span class="sd">            Maximal number of spots to load.</span>
+<span class="sd">        intensity_threshold : float</span>
+<span class="sd">            Minimal intensity that should be in the image for</span>
+<span class="sd">            a spot to be loaded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">hologram</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hologram</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No mask available in the memory to use for computing intensities&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="n">hologram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hologram</span>
+
+        <span class="k">if</span> <span class="n">hologram</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Given phase mask does not match stored illumination pattern&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">expected_field</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">hologram</span><span class="p">))</span>
+        <span class="p">))</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span>
+            <span class="n">expected_field</span>
+        <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_spots</span>
+        <span class="n">idx_highest_spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argpartition</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span><span class="o">-</span><span class="n">n_spots</span><span class="p">)[</span><span class="o">-</span><span class="n">n_spots</span><span class="p">:],</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idx_highest_spots</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">image</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">intensity_threshold</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addSpot</span><span class="p">(</span>
+                <span class="n">roll</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">),</span> 
+                <span class="n">roll</span><span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">),</span> 
+                <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">expected_field</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sortSpots</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PhaseMaskGenerator.readHologram">
+<a class="viewcode-back" href="../pyslmsorting.html#pyslmsorting.PhaseMaskGenerator.readHologram">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">readHologram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">hologram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">intensity_threshold</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the spots from the given hologram.</span>
+
+<span class="sd">        Computes using the current illumination pattern a predicted</span>
+<span class="sd">        intensity and takes the top n_spots spots out of this. If </span>
+<span class="sd">        these are bigger than a set threshold, the function extracts</span>
+<span class="sd">        all values from the calculation  and returns these.</span>
+
+<span class="sd">        This detection leaves the spots unsorted, so one needs to resort</span>
+<span class="sd">        afterwards. We do that here from low to high values in the</span>
+<span class="sd">        unrolled coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hologram : np.array of floats or None</span>
+<span class="sd">            Phase mask to be used. If None, the mask in the</span>
+<span class="sd">            PMG memory will be used if available</span>
+<span class="sd">        n_spots : int</span>
+<span class="sd">            Maximal number of spots to load.</span>
+<span class="sd">        intensity_threshold : float</span>
+<span class="sd">            Minimal intensity that should be in the image for</span>
+<span class="sd">            a spot to be loaded.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        return_spots : np.ndarray</span>
+<span class="sd">            Array like spots containing the detected spots.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">hologram</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hologram</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No mask available in the memory to use for computing intensities&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="n">hologram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hologram</span>
+
+        <span class="k">if</span> <span class="n">hologram</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Given phase mask does not match stored illumination pattern&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">expected_field</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Ui</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">hologram</span><span class="p">))</span>
+        <span class="p">))</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span>
+            <span class="n">expected_field</span>
+        <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_spots</span>
+        <span class="n">idx_highest_spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argpartition</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span><span class="o">-</span><span class="n">n_spots</span><span class="p">)[</span><span class="o">-</span><span class="n">n_spots</span><span class="p">:],</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)]</span>
+
+        <span class="n">return_spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idx_highest_spots</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">image</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">intensity_threshold</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">return_spots</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">return_spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[[</span><span class="n">roll</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">),</span> <span class="n">roll</span><span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">expected_field</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">])]],</span> 
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">return_spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span>
+                    <span class="n">return_spots</span><span class="p">,</span> 
+                    <span class="p">[</span><span class="n">roll</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">),</span> <span class="n">roll</span><span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">expected_field</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">])]</span>
+                <span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">return_spots</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">return_spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">return_spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
+
+            <span class="n">unrolled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">return_spots</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">unrolled</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">unrolled</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">unroll</span><span class="p">(</span><span class="n">return_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+                <span class="n">unrolled</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">unroll</span><span class="p">(</span><span class="n">return_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+            <span class="n">return_spots</span> <span class="o">=</span> <span class="n">return_spots</span><span class="p">[</span><span class="n">unrolled</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
+
+            <span class="n">unrolled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">return_spots</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">unrolled</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">unrolled</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">unroll</span><span class="p">(</span><span class="n">return_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+                <span class="n">unrolled</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">unroll</span><span class="p">(</span><span class="n">return_spots</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+            <span class="n">return_spots</span> <span class="o">=</span> <span class="n">return_spots</span><span class="p">[</span><span class="n">unrolled</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">return_spots</span></div>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Destructor to remove the buffers from the GPU memory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">releaseBuffers</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ivo Knottnerus.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,259 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kernels &mdash; pySLMSorting 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example Notebook" href="Example.html" />
+    <link rel="prev" title="pySLMSorting package" href="pyslmsorting.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pySLMSorting
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Python</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#extensions">Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-intensity">get_intensity()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-target">get_target()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#update-target">update_target()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-field-from-spots">set_field_from_spots()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#update-field-shortcut">update_field_shortcut()</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Example.html">Example Notebook</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pySLMSorting</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Kernels</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/kernels.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="kernels">
+<h1>Kernels<a class="headerlink" href="#kernels" title="Link to this heading"></a></h1>
+<p>Below follows a list of the kernels that are used in the GPU to produce the patterns. These are all defined in the <cite>buildKernels()</cite> function of the <cite>GPUHandler</cite>. The kernels in the python code are closely related to the ones in the C++ version. Differences are mentioned.</p>
+<section id="extensions">
+<h2>Extensions<a class="headerlink" href="#extensions" title="Link to this heading"></a></h2>
+<p>Let us start with the required extensions. The code uses 64-bit floats for the complex numbers and 32-bit floats for the general calculation. Therefore, one needs to load <cite>cl_khr_fp64</cite>, define the <cite>PYOPENCL_DEFINE_CDOUBLE</cite> and load the header file. In addition to this, we also set the width and height of the SLM chip from the parent memory as a kernel definition, so that we can use it to locate pixels. In the kernels, this looks like:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="cp">#pragma OPENCL EXTENSION cl_khr_fp64 : enable</span>
+<span class="linenos">2</span><span class="cp">#define PYOPENCL_DEFINE_CDOUBLE</span>
+<span class="linenos">3</span><span class="cp">#define SLM_WIDTH &quot;&quot;&quot;+str(self.parent.width)+&quot;&quot;&quot;</span>
+<span class="linenos">4</span><span class="cp">#define SLM_HEIGHT &quot;&quot;&quot;+str(self.parent.height)+&quot;&quot;&quot;</span>
+<span class="linenos">5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pyopencl-complex.h&gt;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All kernels are 1D. It could be that programming in 2D speeds up, but so far, we have not seen this.</p>
+</div>
+<p>Now we go over the relevant kernels one by one.</p>
+</section>
+<section id="get-intensity">
+<h2>get_intensity()<a class="headerlink" href="#get-intensity" title="Link to this heading"></a></h2>
+<p>The simplest kernel is to get the intensity of the electric field at a specific location. This is used in the weighting. It simply looks at the <cite>field</cite> buffer and looks at location <span class="math notranslate nohighlight">\((y, x)\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that the choice of <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> leads to contradictory indices compared to <span class="math notranslate nohighlight">\((r, c)\)</span> most of the times. Since humans often think in <span class="math notranslate nohighlight">\((x, y)\)</span>, we have adopted these coordinates, but in the calculations this then translates to <span class="math notranslate nohighlight">\((y, x)\)</span> because matrices use rows and columns.</p>
+</div>
+<p>The resulting amplitude squared is saved in a vector intensity of length <span class="math notranslate nohighlight">\(N\)</span>. This can efficiently be read out.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">__kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">get_intensity</span><span class="p">(</span>
+<span class="linenos"> 2</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">intensity</span><span class="p">,</span>
+<span class="linenos"> 3</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span>
+<span class="linenos"> 4</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">,</span>
+<span class="linenos"> 5</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="n">cfloat_t</span><span class="w"> </span><span class="o">*</span><span class="n">field</span>
+<span class="linenos"> 6</span><span class="p">)</span>
+<span class="linenos"> 7</span><span class="p">{</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_id</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="w">    </span><span class="n">intensity</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cfloat_abs_squared</span><span class="p">(</span><span class="n">field</span><span class="p">[(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">SLM_WIDTH</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]]);</span>
+<span class="linenos">11</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="get-target">
+<h2>get_target()<a class="headerlink" href="#get-target" title="Link to this heading"></a></h2>
+<p>Sets the target intensity of the spots at locations <span class="math notranslate nohighlight">\((y, x)\)</span> with their target intensities. This is not done in the C++ code, because it is only useful in the WGS algorithm. Otherwise, we can get by with simply defining the desired electric field, see below with the shortcut, but here we need to suppress higher order effects as well and thus have an intensity pattern that contains also the zeros where we do not want spots.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">__kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">get_target</span><span class="p">(</span>
+<span class="linenos"> 2</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span>
+<span class="linenos"> 3</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">,</span>
+<span class="linenos"> 4</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">target_intensity</span><span class="p">,</span>
+<span class="linenos"> 5</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">target</span>
+<span class="linenos"> 6</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 7</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_id</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_size</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="w">    </span><span class="n">target</span><span class="p">[(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">SLM_WIDTH</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">target_intensity</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="linenos">11</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="update-target">
+<h2>update_target()<a class="headerlink" href="#update-target" title="Link to this heading"></a></h2>
+<p>As part of the WGS algorithm, the target needs to be updated. Here, we need to be careful to not let the final outcome always become 1. For practical reasons, we also want to be able to produce non-uniform pattern, e.g. when iterating experimental aberrations. The basic update conditions are defined as follows:</p>
+<div class="math notranslate nohighlight">
+\[T_n = T_{n-1} \sqrt{\frac{T_{n-1}}{I_{n-1}}} \frac{1}{N}\sum_{i=1}^{N}\sqrt{\frac{I_{n-1}}{T_{n-1}}},\]</div>
+<p>where <span class="math notranslate nohighlight">\(T_n\)</span> is the target intensity for the <span class="math notranslate nohighlight">\(n\)</span>-th iteration, and <span class="math notranslate nohighlight">\(I_n\)</span> is the measured intensity. The sum is a normalizing average over the <span class="math notranslate nohighlight">\(N\)</span> desired tweezers, to ensure the calculation stays within bounds.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">__kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">update_target</span><span class="p">(</span>
+<span class="linenos"> 2</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span>
+<span class="linenos"> 3</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">,</span>
+<span class="linenos"> 4</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">target_intensity</span><span class="p">,</span>
+<span class="linenos"> 5</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">intensity</span><span class="p">,</span>
+<span class="linenos"> 6</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">target</span>
+<span class="linenos"> 7</span><span class="p">){</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_id</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">mean_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">11</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_size</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="linenos">12</span><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">size</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="linenos">13</span><span class="w">        </span><span class="n">mean_val</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">((</span><span class="n">intensity</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">target_intensity</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">size</span><span class="p">;</span>
+<span class="linenos">14</span>
+<span class="linenos">15</span><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">intensity</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mf">0.</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">target_intensity</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mf">0.</span><span class="p">)</span>
+<span class="linenos">16</span><span class="w">        </span><span class="n">target</span><span class="p">[(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">SLM_WIDTH</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="p">(</span><span class="n">mean_val</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">intensity</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">target_intensity</span><span class="p">[</span><span class="n">i</span><span class="p">]));</span>
+<span class="linenos">17</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To calculate the average, each worker has to loop over all <span class="math notranslate nohighlight">\(N\)</span> intensities. For large number of tweezers, it may be better to first calculate the averages, e.g. by transferring the information to the CPU, and then passing only a single normalization number to the kernel.</p>
+</div>
+<p>Again, because this kernels is part of the WGS algorithm. It has no C++ counterpart in the current implementation.</p>
+</section>
+<section id="set-field-from-spots">
+<h2>set_field_from_spots()<a class="headerlink" href="#set-field-from-spots" title="Link to this heading"></a></h2>
+<p>Creates the electric field amplitude and phase at the desired coordinates <span class="math notranslate nohighlight">\((y, x)\)</span>. This is useful as a starting point of the iteration when no hologram is provided. A slightly different variant is the core of the interpolation kernel.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">__kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">set_field_from_spots</span><span class="p">(</span>
+<span class="linenos"> 2</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">target_phase</span><span class="p">,</span>
+<span class="linenos"> 3</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">intensity</span><span class="p">,</span>
+<span class="linenos"> 4</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span>
+<span class="linenos"> 5</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">,</span>
+<span class="linenos"> 6</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="n">cfloat_t</span><span class="w"> </span><span class="o">*</span><span class="n">field</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="p">){</span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_id</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="linenos">10</span><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_size</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="w">    </span><span class="n">field</span><span class="p">[(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">SLM_WIDTH</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cfloat_new</span><span class="p">(</span>
+<span class="linenos">13</span><span class="w">        </span><span class="n">sqrt</span><span class="p">(</span><span class="n">intensity</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">target_phase</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+<span class="linenos">14</span><span class="w">        </span><span class="n">sqrt</span><span class="p">(</span><span class="n">intensity</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">target_phase</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="linenos">15</span><span class="w">    </span><span class="p">);</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="update-field-shortcut">
+<h2>update_field_shortcut()<a class="headerlink" href="#update-field-shortcut" title="Link to this heading"></a></h2>
+<p>The update kernel for the linear interpolation algorithm, which is the same for the C++ and the python code. The idea is to keep the update conditions as simple as possible. In this case, we only update the <span class="math notranslate nohighlight">\(N\)</span> coordinate pixels of the electric field in the <cite>field</cite> buffer. To minimize any effects from residual amplitudes that are present from earlier calculations, we add a very large factor to the amplitude, effectively drowning out all information in the other pixels. This allows the update to only loop over <span class="math notranslate nohighlight">\(N\)</span> coordinates, instead of the whole <span class="math notranslate nohighlight">\(1024\times1024\)</span> chip size.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>An additional benefit is that this removes the need to perform an FFT back and removing the information of the previous hologram. At the SLM plane, the field will consist of a very small amplitude due to the spread normalized illumination and phases corresponding to the hologram. By using this kernel, we neglect all that information and only obtain a field that essentially looks like the field in the tweezer focus. Avoiding the single FFT does not save much time because the VkFFT implementation is very fast in C++ (~ <span class="math notranslate nohighlight">\(20\,\mathrm{\mu s}\)</span>), but it alleviates the problem of having to remove the previous <span class="math notranslate nohighlight">\(N\)</span> coordinates when moving tweezers.</p>
+</div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">__kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">update_field_shortcut</span><span class="p">(</span>
+<span class="linenos"> 2</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">target_phase</span><span class="p">,</span>
+<span class="linenos"> 3</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">intensity</span><span class="p">,</span>
+<span class="linenos"> 4</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span>
+<span class="linenos"> 5</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">,</span>
+<span class="linenos"> 6</span><span class="w">    </span><span class="n">__global</span><span class="w"> </span><span class="n">cfloat_t</span><span class="w"> </span><span class="o">*</span><span class="n">field</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="p">){</span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_global_id</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="w">    </span><span class="c1">// the factor 1000 is a dirty trick.</span>
+<span class="linenos">12</span><span class="w">    </span><span class="n">field</span><span class="p">[(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">SLM_WIDTH</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cfloat_new</span><span class="p">(</span>
+<span class="linenos">13</span><span class="w">        </span><span class="mf">10000.</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">intensity</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">target_phase</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+<span class="linenos">14</span><span class="w">        </span><span class="mf">10000.</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">intensity</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">target_phase</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="linenos">15</span><span class="w">    </span><span class="p">);</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyslmsorting.html" class="btn btn-neutral float-left" title="pySLMSorting package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Example.html" class="btn btn-neutral float-right" title="Example Notebook" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ivo Knottnerus.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

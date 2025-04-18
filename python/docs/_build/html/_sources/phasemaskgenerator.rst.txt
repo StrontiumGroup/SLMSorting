@@ -1,0 +1,10 @@
+phasemaskgenerator package
+==========================
+
+Module contents
+---------------
+
+.. automodule:: phasemaskgenerator
+   :members:
+   :undoc-members:
+   :show-inheritance:

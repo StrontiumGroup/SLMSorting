@@ -1,0 +1,772 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Example Notebook &mdash; pySLMSorting 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Kernels" href="kernels.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pySLMSorting
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kernels.html">Kernels</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example Notebook</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Creating-Hologram">Creating Hologram</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Define-the-spot-pattern">Define the spot pattern</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Make-the-pattern-using-GSW">Make the pattern using GSW</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Analyze-the-spots-from-a-hologram">Analyze the spots from a hologram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Save-the-phase-mask">Save the phase mask</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Iterations-with-data-from-atoms">Iterations with data from atoms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#3.-Update-and-recalculate">3. Update and recalculate</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Rearrange-tweezers">Rearrange tweezers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Example-of-3x3-into-2x2">Example of 3x3 into 2x2</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pySLMSorting</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Example Notebook</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Example.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Example-Notebook">
+<h1>Example Notebook<a class="headerlink" href="#Example-Notebook" title="Link to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">load_ext</span> autoreload
+<span class="o">%</span><span class="k">autoreload</span> 2
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyslmsorting</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhaseMaskGenerator</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">timeit</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+
+<span class="n">zfactor</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Zero-padding factor</span>
+<span class="n">height</span> <span class="o">=</span> <span class="mi">1024</span>  <span class="c1"># Chip dim 1</span>
+<span class="n">width</span> <span class="o">=</span> <span class="mi">1024</span>  <span class="c1"># Chip dimension 2</span>
+
+<span class="c1"># Init instance and load kernels.</span>
+<span class="n">pmg</span> <span class="o">=</span> <span class="n">PhaseMaskGenerator</span><span class="p">(</span>
+    <span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="o">*</span><span class="n">zfactor</span><span class="p">),</span>
+    <span class="nb">int</span><span class="p">(</span><span class="n">height</span><span class="o">*</span><span class="n">zfactor</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Selected device:  Intel(R) Graphics
+{&#39;app&#39;: None, &#39;config&#39;: None, &#39;fast_axis&#39;: 1, &#39;shape&#39;: [1024, 1024], &#39;n_batch&#39;: 1, &#39;skip_axis&#39;: [False, False], &#39;ndim&#39;: 2, &#39;axes0&#39;: [1, 0], &#39;shape0&#39;: (1024, 1024), &#39;strides0&#39;: None, &#39;inplace&#39;: True, &#39;r2c&#39;: False, &#39;r2c_odd&#39;: False, &#39;dct&#39;: 0, &#39;dst&#39;: 0, &#39;tmp_buffer_nbytes&#39;: 0, &#39;use_bluestein_fft&#39;: None, &#39;nb_axis_upload&#39;: None, &#39;forceCallbackVersionRealTransforms&#39;: -1, &#39;disableReorderFourStep&#39;: -1, &#39;coalescedMemory&#39;: -1, &#39;numSharedBanks&#39;: -1, &#39;aimThreads&#39;: -1, &#39;performBandwidthBoost&#39;: -1, &#39;registerBoost&#39;: -1, &#39;registerBoostNonPow2&#39;: -1, &#39;registerBoost4Step&#39;: -1, &#39;warpSize&#39;: -1, &#39;groupedBatch&#39;: [-1, -1, -1], &#39;use_lut&#39;: -1, &#39;keepShaderCode&#39;: -1, &#39;norm&#39;: 1, &#39;precision&#39;: 4, &#39;queue&#39;: &lt;pyopencl._cl.CommandQueue object at 0x000001B0EDAF9EA0&gt;}
+</pre></div></div>
+</div>
+<section id="Creating-Hologram">
+<h2>Creating Hologram<a class="headerlink" href="#Creating-Hologram" title="Link to this heading"></a></h2>
+<p>In the first part of this code we will use the PMG class to create a hologram for a defined pattern. We start by setting a geometry of spots and then run the optimizer to give us a hologram that we can then save.</p>
+<section id="Define-the-spot-pattern">
+<h3>Define the spot pattern<a class="headerlink" href="#Define-the-spot-pattern" title="Link to this heading"></a></h3>
+<p>We need to define some geometry for the spots. We can use <code class="docutils literal notranslate"><span class="pre">pmg.addSpot()</span></code> for that, which takes a tuple of coordinates <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">z,</span> <span class="pre">I,</span> <span class="pre">psi]</span></code>. In this example, we define a 3x3 array with spacing of 12 Fourier units.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create some spot pattern, e.g. n_x x n_y square grid in center.</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="n">n_x</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">n_y</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">spot_distance</span> <span class="o">=</span> <span class="mi">12</span><span class="o">*</span><span class="n">zfactor</span>
+<span class="n">spot_distance</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">spot_distance</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">pmg</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">pmg</span><span class="o">.</span><span class="n">height</span><span class="p">))</span>
+<span class="n">start_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">n_x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">spot_distance</span><span class="p">)</span>
+<span class="n">start_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">n_y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">spot_distance</span><span class="p">)</span>
+
+<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n_x</span><span class="p">:</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">n_y</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">start_x</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">spot_distance</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">start_y</span> <span class="o">+</span> <span class="n">j</span> <span class="o">*</span> <span class="n">spot_distance</span>
+
+        <span class="n">pmg</span><span class="o">.</span><span class="n">addSpot</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>  <span class="c1"># 2D</span>
+            <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Compensate for diffraction intensity</span>
+            <span class="kc">None</span>  <span class="c1"># Do not specify an optical phase</span>
+        <span class="p">)</span>
+
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X-values in the computational space:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Y-values in the computational space:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+X-values in the computational space:
+[1012, 1012, 1012, 0, 0, 0, 12, 12, 12]
+Y-values in the computational space:
+[1012, 0, 12, 1012, 0, 12, 1012, 0, 12]
+</pre></div></div>
+</div>
+</section>
+<section id="Make-the-pattern-using-GSW">
+<h3>Make the pattern using GSW<a class="headerlink" href="#Make-the-pattern-using-GSW" title="Link to this heading"></a></h3>
+<p>Now we can run the code to calculate the weighted Gerchberg-Saxton algorithm on the GPU/CPU to create a uniform pattern. There are several ways to stop the iteration:</p>
+<ul class="simple">
+<li><p>Hitting the maximum number of iterations (<code class="docutils literal notranslate"><span class="pre">pmg.gpu.max_iter</span></code>);</p></li>
+<li><p>No big change in the efficiency or maximum deviation of the intensities.</p></li>
+</ul>
+<p>Besides, the function <code class="docutils literal notranslate"><span class="pre">calculateGSW()</span></code> can plot the result by using the <code class="docutils literal notranslate"><span class="pre">show_plot</span></code> parameter and save the hologram as an 8-bit bitmap if one uses the <code class="docutils literal notranslate"><span class="pre">save_path</span></code> parameter.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pmg</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+<span class="n">t0</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+<span class="n">hologram</span> <span class="o">=</span> <span class="n">pmg</span><span class="o">.</span><span class="n">calculateGSW</span><span class="p">(</span>
+    <span class="n">start_hologram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_delta</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
+    <span class="n">dev_delta</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
+    <span class="n">dev_eff</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+    <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;./masks/hologram.bmp&quot;</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time elapsed: </span><span class="si">{</span><span class="p">(</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000</span><span class="si">}</span><span class="s2"> ms</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_7_0.png" src="_images/Example_7_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Time elapsed: 7380.42889999997 ms
+
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Analyze-the-spots-from-a-hologram">
+<h2>Analyze the spots from a hologram<a class="headerlink" href="#Analyze-the-spots-from-a-hologram" title="Link to this heading"></a></h2>
+<p>With the function <code class="docutils literal notranslate"><span class="pre">readHologram()</span></code> one can provide a hologram to the PMG instance and let it search for the brightest <code class="docutils literal notranslate"><span class="pre">n_spots</span></code> pixels in the estimated tweezer pattern obtained by performing a Fourier transform with the illumination profile loaded in the PMG. If these are over a preset <code class="docutils literal notranslate"><span class="pre">intensity_threshold</span></code>, the function will recognize it as a tweezer and record the coordinates, intensity and optical phase. There is also a similar function <code class="docutils literal notranslate"><span class="pre">loadFromHologram()</span></code>, which will replace the
+current spots with the detected spots.</p>
+<p>Note that the detection by default does not sort the spots. Therefore, it is important to stick to a convention with respect to sorting. We adopt a convention from low to high in coordinates.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ret</span> <span class="o">=</span> <span class="n">pmg</span><span class="o">.</span><span class="n">readHologram</span><span class="p">(</span><span class="n">hologram</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X-values in the computational space (programmed):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Y-values in the computational space (programmed):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;I-values in the computational space (programmed):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X-values in the computational space (detected):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Y-values in the computational space (detected):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;I-values in the computational space (detected):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ret</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+X-values in the computational space (programmed):
+[1012, 1012, 1012, 0, 0, 0, 12, 12, 12]
+Y-values in the computational space (programmed):
+[1012, 0, 12, 1012, 0, 12, 1012, 0, 12]
+I-values in the computational space (programmed):
+[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+X-values in the computational space (detected):
+[1012, 1012, 1012, 0, 0, 0, 12, 12, 12]
+Y-values in the computational space (detected):
+[1012, 0, 12, 1012, 0, 12, 1012, 0, 12]
+I-values in the computational space (detected):
+[1.0000000336643617, 1.0000000482795075, 1.0000000541723195, 0.9999998330670601, 0.9999999707942614, 0.9999998889927376, 0.9999999059714143, 1.0000002062475608, 1.0000000588107771]
+</pre></div></div>
+</div>
+</section>
+<section id="Save-the-phase-mask">
+<h2>Save the phase mask<a class="headerlink" href="#Save-the-phase-mask" title="Link to this heading"></a></h2>
+<p>Next, we can also save the mask separately. We can add some lens phase and grating phase on top of it. We use typically now <span class="math notranslate nohighlight">\(47\lambda\)</span> lens phase and a grating phase with period 8. Currently, these are added in a different place and we only save the bare hologram.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">hologram_crop</span> <span class="o">=</span> <span class="n">hologram</span><span class="p">[</span>
+    <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">pmg</span><span class="o">.</span><span class="n">width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">height</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">pmg</span><span class="o">.</span><span class="n">width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">height</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">pmg</span><span class="o">.</span><span class="n">width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">width</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">pmg</span><span class="o">.</span><span class="n">width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">width</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">One could also add other lenses on top of the hologram directly:</span>
+
+<span class="sd">lens = np.array(</span>
+<span class="sd">    Image.open(&quot;../Masks/lens_phase.bmp&quot;)</span>
+<span class="sd">)</span>
+<span class="sd">grating = np.array(</span>
+<span class="sd">    Image.open(&quot;../Masks/gradient_8.bmp&quot;)</span>
+<span class="sd">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">total</span> <span class="o">=</span> <span class="p">((</span><span class="n">hologram_crop</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="o">%</span> <span class="mi">256</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">In case you want to add other masks you can do that here:</span>
+
+<span class="sd">total = (total + lens + grating) % 256</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">phi_im</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">total</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+<span class="n">phi_im</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;./masks/hologram.bmp&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Iterations-with-data-from-atoms">
+<h2>Iterations with data from atoms<a class="headerlink" href="#Iterations-with-data-from-atoms" title="Link to this heading"></a></h2>
+<p>In the second part we assume one has taken data with a hologram on atoms and wishes to get rid of non-uniformities. For this, we perform iterations on the trap depths. Iterations between runs consist from a couple of different steps:</p>
+<ul class="simple">
+<li><ol class="arabic simple">
+<li><p>Measuring a site-specific trap depth</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="2">
+<li><p>Fitting the data</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="3">
+<li><p>Updating the projected amplitudes for the PMG and recalculating</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="4">
+<li><p>Saving the phase mask</p></li>
+</ol>
+</li>
+</ul>
+<section id="3.-Update-and-recalculate">
+<h3>3. Update and recalculate<a class="headerlink" href="#3.-Update-and-recalculate" title="Link to this heading"></a></h3>
+<p>The first step after you have obtained a dataset is analysing the trap depth per ROI out of them. We shall ignore the way how to obtain a list of the trap depths, because one can do so in many ways and assume a measured relative intensity distrubition. Instead, we only focus on the updating procedure here. Let us take for example a really non-uniform sample.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">calculate_target_intensities</span><span class="p">(</span><span class="n">old_intensities</span><span class="p">,</span> <span class="n">measured_intensities</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">0.85</span><span class="p">):</span>
+    <span class="n">target_intensities</span> <span class="o">=</span> <span class="n">old_intensities</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">old_intensities</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span>
+        <span class="mi">1</span> <span class="o">-</span> <span class="n">gain</span> <span class="o">*</span> <span class="p">(</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">measured_intensities</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">measured_intensities</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">target_intensities</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">target_intensities</span><span class="p">)</span>
+
+<span class="n">measurement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span>
+    <span class="mf">0.8487089622929657</span><span class="p">,</span> <span class="mf">1.1303997302479647</span><span class="p">,</span> <span class="mf">0.8605467829281191</span><span class="p">,</span>
+    <span class="mf">1.1641333827917404</span><span class="p">,</span> <span class="mf">1.107361741705235</span><span class="p">,</span> <span class="mf">0.951352832965288</span><span class="p">,</span>
+    <span class="mf">1.0368541081386276</span><span class="p">,</span> <span class="mf">0.9029229005052344</span><span class="p">,</span> <span class="mf">0.9977195584248251</span>
+<span class="p">])</span>
+<span class="n">before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="c1"># Calculate the necessary intensities to go from measurement to before.</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">calculate_target_intensities</span><span class="p">(</span>
+    <span class="n">before</span><span class="p">,</span>
+    <span class="n">measurement</span><span class="p">,</span>
+    <span class="n">gain</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
+
+<span class="c1"># Recalculate hologram</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+<span class="n">hologram_iterated</span> <span class="o">=</span> <span class="n">pmg</span><span class="o">.</span><span class="n">calculateGSW</span><span class="p">(</span>
+    <span class="n">start_hologram</span><span class="o">=</span><span class="n">hologram</span><span class="p">,</span>
+    <span class="n">dev_delta</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">dev_eff</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+    <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">ret</span> <span class="o">=</span> <span class="n">pmg</span><span class="o">.</span><span class="n">readHologram</span><span class="p">(</span><span class="n">hologram_iterated</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<span class="n">after</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">ret</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="c1"># Reset to not mess up the notebook.</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">before</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_14_0.png" src="_images/Example_14_0.png" />
+</div>
+</div>
+<p>We can test the effect of the produced pattern by plotting the measured intensities (blue), the intended spread before (orange), the newly calculated intensity (green) and the expected next measurement (red). The expectation is calculated as:</p>
+<div class="math notranslate nohighlight">
+\[\mathbb{E(I_i)} = \frac{I_{i-1}C_{i}}{\frac{1}{N}\sum{I_{i-1}C_{i}}},\]</div>
+<p>where <span class="math notranslate nohighlight">\(I_i\)</span> is the intensity measured in iteration <span class="math notranslate nohighlight">\(i\)</span>, <span class="math notranslate nohighlight">\(C_i\)</span> is the computed intensity and <span class="math notranslate nohighlight">\(N\)</span> is the number of tweezers.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">measurement</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Measured&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">before</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Before&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;After&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">measurement</span><span class="o">*</span><span class="n">after</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">measurement</span><span class="o">*</span><span class="n">after</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Expected&quot;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;ROI&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Normalized intensity&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_16_0.png" src="_images/Example_16_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Rearrange-tweezers">
+<h2>Rearrange tweezers<a class="headerlink" href="#Rearrange-tweezers" title="Link to this heading"></a></h2>
+<p>In the last part of this notebook, we explore the option to rearrange tweezers. For this, the PMG has function <code class="docutils literal notranslate"><span class="pre">calculateSingle()</span></code>. Contrary to the <code class="docutils literal notranslate"><span class="pre">calculateGSW()</span></code>, this function does not iterate. Rather it does:</p>
+<ul class="simple">
+<li><p>Copy the target spots in the memory to the GPU buffers</p></li>
+<li><p>Define super bright spots in the field buffer to wash out any existing data</p></li>
+<li><p>Perform an iFFT</p></li>
+<li><p>Retrieve the phase information as a hologram</p></li>
+</ul>
+<p>This is not normalized properly, but since we do only do a single iteration, this does not matter. Also, we do not perform an FFT back, so when placing the spots of the next iteration, the field buffer contains the electric field at the SLM. However, the amplitudes are small and when redefining the next spots with a very large amplitude, this becomes irrelevant noise. In principle, a single FFT back is very fast so one could do that, but then one needs to also remove the information about the
+previous locations of the tweezers.</p>
+<p>We present an example of moving the 3x3 grid left 10 units.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pmg</span><span class="o">.</span><span class="n">loadFromHologram</span><span class="p">(</span><span class="n">hologram</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">pmg</span><span class="o">.</span><span class="n">width</span>
+    <span class="n">pmg</span><span class="o">.</span><span class="n">calculateSingle</span><span class="p">(</span>
+        <span class="n">show_plot</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;./masks/translated_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.bmp&quot;</span>
+    <span class="p">)</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">loadFromHologram</span><span class="p">(</span><span class="n">hologram</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_0.png" src="_images/Example_18_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_1.png" src="_images/Example_18_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_2.png" src="_images/Example_18_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_3.png" src="_images/Example_18_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_4.png" src="_images/Example_18_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_5.png" src="_images/Example_18_5.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_6.png" src="_images/Example_18_6.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_7.png" src="_images/Example_18_7.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_8.png" src="_images/Example_18_8.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_18_9.png" src="_images/Example_18_9.png" />
+</div>
+</div>
+<section id="Example-of-3x3-into-2x2">
+<h3>Example of 3x3 into 2x2<a class="headerlink" href="#Example-of-3x3-into-2x2" title="Link to this heading"></a></h3>
+<p>Next, let us assume we want to rearrange atoms. For this, we need to define some target geometry. It goes beyond the scope of the python module right now to have this, but we can make a simple example of sorting 4 out of the 9 tweezers into a diamond shape. Let us assume we have spots:</p>
+<div class="math notranslate nohighlight">
+\[A_n = \{(-12, -12), (-12, 0), (-12, 12), (0, -12), (0, 0), (0, 12), (12, -12), (12, 0), (12, 12)\}\]</div>
+<div class="math notranslate nohighlight">
+\[B_n = \{(-6, 0), (0, -6), (0, 6), (6, 0)\}\]</div>
+<p>Where these numbers just define the coordinates. We first use the PMG to calculate a hologram for the diamond in the end:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">addSpot</span><span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">addSpot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">addSpot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">addSpot</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+<span class="n">pmg</span><span class="o">.</span><span class="n">hologram</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">hologram_2x2</span> <span class="o">=</span> <span class="n">pmg</span><span class="o">.</span><span class="n">calculateGSW</span><span class="p">(</span>
+    <span class="n">start_hologram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_delta</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
+    <span class="n">dev_delta</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
+    <span class="n">dev_eff</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+    <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;./masks/hologram_2x2.bmp&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_20_0.png" src="_images/Example_20_0.png" />
+</div>
+</div>
+<p>Now we have two holograms with information on all coordinates, intensities and optical phases. Let’s assume we have loaded 5 atoms in the original 3x3 pattern and use 4 of those to form the diamond, with a mapping:</p>
+<div class="math notranslate nohighlight">
+\[M = \{1 \mapsto 0, 0 \mapsto 1, 4 \mapsto 2, 8 \mapsto 3 \},\]</div>
+<p>where the first numbers are the indices in the 3x3 and the second numbers are the indices in the 2x2. First, we need to compute the maximum length which is defined by the maximal displacement in <span class="math notranslate nohighlight">\(x\)</span> or <span class="math notranslate nohighlight">\(y\)</span>. Because the spots are defined on the rim, we have to be careful and calculate a shift that corresponds to the spot location after shifting back to the center. Having done that, we create a function to calculate the values at the <span class="math notranslate nohighlight">\(i\)</span>-th hologram.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">-</span> <span class="n">dim</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+<span class="n">spots_2x2</span> <span class="o">=</span> <span class="n">pmg</span><span class="o">.</span><span class="n">readHologram</span><span class="p">(</span><span class="n">hologram_2x2</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">spots_3x3</span> <span class="o">=</span> <span class="n">pmg</span><span class="o">.</span><span class="n">readHologram</span><span class="p">(</span><span class="n">hologram</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+<span class="n">loaded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">])</span>
+<span class="n">mapping</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="n">max_dist</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mapping</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">mapping</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">shift</span><span class="p">(</span><span class="n">spots_2x2</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">shift</span><span class="p">(</span><span class="n">spots_3x3</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">shift</span><span class="p">(</span><span class="n">spots_2x2</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">shift</span><span class="p">(</span><span class="n">spots_3x3</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="n">max_dist</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">max_dist</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Need to move </span><span class="si">{</span><span class="n">max_dist</span><span class="si">}</span><span class="s2"> steps.&quot;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_spot_at_i</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">imax</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    <span class="n">spot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">spot</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">shift</span><span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">i</span><span class="o">/</span><span class="n">imax</span> <span class="o">*</span> <span class="p">(</span><span class="n">shift</span><span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">shift</span><span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span> <span class="o">%</span> <span class="n">width</span>
+    <span class="n">spot</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">shift</span><span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">i</span><span class="o">/</span><span class="n">imax</span> <span class="o">*</span> <span class="p">(</span><span class="n">shift</span><span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">shift</span><span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span> <span class="o">%</span> <span class="n">height</span>
+    <span class="n">spot</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">i</span><span class="o">/</span><span class="n">imax</span> <span class="o">*</span> <span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+    <span class="n">spot</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">i</span><span class="o">/</span><span class="n">imax</span> <span class="o">*</span> <span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">spot</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Need to move 12 steps.
+</pre></div></div>
+</div>
+<p>We start by turning off the unused tweezers in the first frame, then we interpolate for <code class="docutils literal notranslate"><span class="pre">max_dist</span></code> steps while saving the holograms. Before calculation each hologram, we redefine each spot with the values obtained from our interpolation function.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pmg</span><span class="o">.</span><span class="n">loadFromHologram</span><span class="p">(</span><span class="n">hologram</span><span class="p">,</span> <span class="n">n_spots</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">loaded</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">pmg</span><span class="o">.</span><span class="n">calculateSingle</span><span class="p">(</span>
+    <span class="n">show_plot</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">save_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;./masks/3x3to2x2_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.bmp&quot;</span>
+<span class="p">)</span>
+
+<span class="k">while</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">max_dist</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mapping</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">mapping</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">pmg</span><span class="o">.</span><span class="n">spots</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">get_spot_at_i</span><span class="p">(</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">max_dist</span><span class="p">,</span> <span class="n">spots_3x3</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">spots_2x2</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">n</span><span class="p">]]</span>
+        <span class="p">)</span>
+    <span class="n">pmg</span><span class="o">.</span><span class="n">calculateSingle</span><span class="p">(</span>
+        <span class="n">show_plot</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;./masks/3x3to2x2_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.bmp&quot;</span>
+    <span class="p">)</span>
+    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_0.png" src="_images/Example_24_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_1.png" src="_images/Example_24_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_2.png" src="_images/Example_24_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_3.png" src="_images/Example_24_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_4.png" src="_images/Example_24_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_5.png" src="_images/Example_24_5.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_6.png" src="_images/Example_24_6.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_7.png" src="_images/Example_24_7.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_8.png" src="_images/Example_24_8.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_9.png" src="_images/Example_24_9.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_10.png" src="_images/Example_24_10.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_11.png" src="_images/Example_24_11.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_12.png" src="_images/Example_24_12.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/Example_24_13.png" src="_images/Example_24_13.png" />
+</div>
+</div>
+<p>Note that the final obtained pattern is exactly the same as the calculated 2x2 pattern. This is because we have interpolated the optical phases.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="kernels.html" class="btn btn-neutral float-left" title="Kernels" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ivo Knottnerus.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

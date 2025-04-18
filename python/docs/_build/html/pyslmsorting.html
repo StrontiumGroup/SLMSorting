@@ -1,0 +1,429 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pySLMSorting package &mdash; pySLMSorting 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Kernels" href="kernels.html" />
+    <link rel="prev" title="Python" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pySLMSorting
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pySLMSorting package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyslmsorting">Module contents</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyslmsorting.GPUHandler"><code class="docutils literal notranslate"><span class="pre">GPUHandler</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyslmsorting.PhaseMaskGenerator"><code class="docutils literal notranslate"><span class="pre">PhaseMaskGenerator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyslmsorting.roll"><code class="docutils literal notranslate"><span class="pre">roll()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyslmsorting.unroll"><code class="docutils literal notranslate"><span class="pre">unroll()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="kernels.html">Kernels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Example.html">Example Notebook</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pySLMSorting</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Python</a></li>
+      <li class="breadcrumb-item active">pySLMSorting package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/pyslmsorting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pyslmsorting-package">
+<h1>pySLMSorting package<a class="headerlink" href="#pyslmsorting-package" title="Link to this heading"></a></h1>
+<section id="module-pyslmsorting">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pyslmsorting" title="Link to this heading"></a></h2>
+<p>pySLMSorting</p>
+<p>Module created for SLM sorting code as presented in:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://arxiv.org/abs/2501.01391">https://arxiv.org/abs/2501.01391</a></p></li>
+</ul>
+<p>Uses OpenCl and pyVKFFT for fast computation of holograms.
+Note that the code only calculates holograms and does not
+take care of e.g. rearranging tweezers. The user has to do
+that separately. See for example, Example.ipynb.</p>
+<p>author: Ivo Knottnerus
+lastedit: 17/04/2025</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyslmsorting.GPUHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyslmsorting.</span></span><span class="sig-name descname"><span class="pre">GPUHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#GPUHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.GPUHandler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that handles all the GPU kernel executions.</p>
+<p>Houses the OpenCl variables and buffers. It also contains
+the kernels and the VkFFTApp to perform FFTs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.GPUHandler.buildKernels">
+<span class="sig-name descname"><span class="pre">buildKernels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#GPUHandler.buildKernels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.GPUHandler.buildKernels" title="Link to this definition"></a></dt>
+<dd><p>Compiles the program with the kernels.</p>
+<p>For a full description of the kernels, check the documentation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.GPUHandler.calculateGSW">
+<span class="sig-name descname"><span class="pre">calculateGSW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">used_spots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hologram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#GPUHandler.calculateGSW"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.GPUHandler.calculateGSW" title="Link to this definition"></a></dt>
+<dd><p>Computes a hologram to produce the tweezer pattern given in used_spots.</p>
+<p>Uses the weighed Gerchberg-Saxton algorithm, described in e.g.:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://doi.org/10.1364/OE.15.001913">https://doi.org/10.1364/OE.15.001913</a></p></li>
+<li><p><a class="reference external" href="https://doi.org/10.1364/oe.27.002184">https://doi.org/10.1364/oe.27.002184</a></p></li>
+<li><p><a class="reference external" href="https://doi.org/10.1364/ol.44.003178">https://doi.org/10.1364/ol.44.003178</a></p></li>
+</ul>
+<p>The function takes a potential starting hologram in <cite>start_hologram</cite>, which
+can be used as the starting point of the iteration. If None (default), the
+hologram in the parent PMG instance will be used. If this is also None, a
+hologram will be made using the presented <cite>used_spots</cite>. This is the starting
+point of the GSW algorithm.</p>
+<p>In the loop of the GSW algorithm, an FFT is performed and at the coordinates
+of the <cite>used_spots</cite> the intensity is compared to the target intensity. If
+this matches, within conditions set by <cite>max_delta</cite>, the loop is terminated.
+Alternatively, is the change in subsequent iterations is small compared to
+<cite>dev_delta</cite>, the loop stops. Last case to terminate is reaching the
+<cite>max_iter</cite>.</p>
+<p>Function can plot and save the hologram directly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>used_spots</strong> (<em>np.ndarray</em>) – Array of the coordinates, intensities phases of the desired pattern.</p></li>
+<li><p><strong>start_hologram</strong> (<em>np.ndarray</em><em> or </em><em>NoneType</em>) – Array with the start hologram for the iteration. Defaults to None.</p></li>
+<li><p><strong>max_delta</strong> (<em>float</em>) – Maximal discrepancy in intensity allowed to stop loop. Defaults to
+1e-3.</p></li>
+<li><p><strong>dev_delta</strong> (<em>float</em>) – Minimial deviation between subsequent iterations to not stop loop.
+Defaults to 1e-3.</p></li>
+<li><p><strong>show_plot</strong> (<em>bool</em>) – Whether to show a plot of the hologram and the expected intensity.
+Defaults to False.</p></li>
+<li><p><strong>save_path</strong> (<em>string</em>) – If presented a non-zero length string, this will be used as the path
+to save the hologram as an 8-bit bitmap. Defaults to “”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>hologram</strong> – Received hologram.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.GPUHandler.calculateSingle">
+<span class="sig-name descname"><span class="pre">calculateSingle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#GPUHandler.calculateSingle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.GPUHandler.calculateSingle" title="Link to this definition"></a></dt>
+<dd><p>Computes a single iFFT of a target electric field.</p>
+<p>First sets the intended electric field that is given by the buffers
+in the GPU memory. Then performs a single iFFT and returns the phase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hologram</strong> – The received hologram.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.GPUHandler.copySpotsToBuffers">
+<span class="sig-name descname"><span class="pre">copySpotsToBuffers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">used_spots</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#GPUHandler.copySpotsToBuffers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.GPUHandler.copySpotsToBuffers" title="Link to this definition"></a></dt>
+<dd><p>Copies the coordinates, intensity and phase of given spots to the GPU.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.GPUHandler.initBuffers">
+<span class="sig-name descname"><span class="pre">initBuffers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#GPUHandler.initBuffers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.GPUHandler.initBuffers" title="Link to this definition"></a></dt>
+<dd><p>Initializes the buffers for the calculation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.GPUHandler.initOpenCl">
+<span class="sig-name descname"><span class="pre">initOpenCl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">do_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#GPUHandler.initOpenCl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.GPUHandler.initOpenCl" title="Link to this definition"></a></dt>
+<dd><p>Initiates the OpenCl variables and VKFFTApp.</p>
+<p>Creates the context, selects a device (can vary per computer) and
+command queue for OpenCl. Also loads the pyVkFFT VKFFTApp.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.GPUHandler.releaseBuffers">
+<span class="sig-name descname"><span class="pre">releaseBuffers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#GPUHandler.releaseBuffers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.GPUHandler.releaseBuffers" title="Link to this definition"></a></dt>
+<dd><p>Clears the buffers.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyslmsorting.</span></span><span class="sig-name descname"><span class="pre">PhaseMaskGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class used for creation of phase masks and iteration of them.</p>
+<p>More complete explanation follows later.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.addSpot">
+<span class="sig-name descname"><span class="pre">addSpot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.addSpot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.addSpot" title="Link to this definition"></a></dt>
+<dd><p>Adds a spot to the np.array containing the spots.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.float32</em>) – x-coordinate, should be integer</p></li>
+<li><p><strong>y</strong> (<em>np.float32</em>) – y-coordinate, should be integer</p></li>
+<li><p><strong>z</strong> (<em>np.float32</em>) – z-coordinate, unused for now</p></li>
+<li><p><strong>i</strong> (<em>np.float32</em>) – relative target intensity. Default: 1.</p></li>
+<li><p><strong>psi</strong> (<em>NoneType</em><em> or </em><em>np.float32</em>) – optical phase of the tweezer</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.calculateGSW">
+<span class="sig-name descname"><span class="pre">calculateGSW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_hologram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_eff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_eff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.calculateGSW"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.calculateGSW" title="Link to this definition"></a></dt>
+<dd><p>Uses the weighted GS algorithm.</p>
+<p>This version uses fft to quickly compute 2D patterns.
+See <a class="reference external" href="https://doi.org/10.1364/OL.44.003178">https://doi.org/10.1364/OL.44.003178</a> for the algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_hologram</strong> (<em>np.ndarray</em>) – A hologram that is used as a starting point for the calculation.
+If None, first the hologram in the memory
+(<cite>PhaseMaskGenerator.hologram</cite>) will be used and if this is also
+None, a random phase is assigned to each tweezer as a starting
+point.</p></li>
+<li><p><strong>max_delta</strong> (<em>float</em>) – If deviation is below this number, the iteration will stop</p></li>
+<li><p><strong>min_eff</strong> (<em>float</em>) – Minimally required efficiency in the sum of the tweezers</p></li>
+<li><p><strong>dev_delta</strong> (<em>float</em>) – Minimal change in delta that is still considered as improvment</p></li>
+<li><p><strong>dev_eff</strong> (<em>float</em>) – Minimal change in efficiency for improvement</p></li>
+<li><p><strong>show_plot</strong> (<em>bool</em>) – Whether to display a plot of the hologram and the expected
+tweezer pattern</p></li>
+<li><p><strong>save_path</strong> (<em>string</em>) – If presented with a string, the hologram is stored at the
+save_path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.calculateSingle">
+<span class="sig-name descname"><span class="pre">calculateSingle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.calculateSingle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.calculateSingle" title="Link to this definition"></a></dt>
+<dd><p>Calculates only a single FFT from the currently used spots.</p>
+<p>This is useful for the linear interpolation rearrangement
+when all the coordinates and optical phases of the tweezers
+are known. The function copies this information to the GPU
+buffers and then runs a single FFT back and retrieves the
+hologram.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>show_plot</strong> (<em>bool</em>) – Whether a plot is displayed of the hologram and the expected
+pattern when using the illumination in the memory. Defaults
+to False.</p></li>
+<li><p><strong>save_path</strong> (<em>string</em>) – Defaults to “”. If a non-zero length string is presented,
+the hologram will be saved to that path.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self.hologram</strong> – Array of floats containing the hologram that is calculated.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.deleteSpot">
+<span class="sig-name descname"><span class="pre">deleteSpot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.deleteSpot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.deleteSpot" title="Link to this definition"></a></dt>
+<dd><p>Removes the spot at index i.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.display" title="Link to this definition"></a></dt>
+<dd><p>Displays the current hologram and a projected pattern.</p>
+<p>Uses illumination pattern in the memory to calculate a single
+forward FFT to get the expected tweezer pattern from given hologram.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.getSpots">
+<span class="sig-name descname"><span class="pre">getSpots</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.getSpots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.getSpots" title="Link to this definition"></a></dt>
+<dd><p>Returns the spots at the locations with the optical center in the middle.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.loadFromHologram">
+<span class="sig-name descname"><span class="pre">loadFromHologram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hologram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_spots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.loadFromHologram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.loadFromHologram" title="Link to this definition"></a></dt>
+<dd><p>Loads the spots from the given hologram.</p>
+<p>Computes using the current illumination pattern a predicted
+intensity and takes the top n_spots spots out of this. If
+these are bigger than a set threshold, the function extracts
+all values from the calculation and stores this as a spot.</p>
+<p>This detection leaves the spots unsorted, so one needs to resort
+afterwards. We do that here from low to high values in the
+unrolled coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hologram</strong> (<em>np.array</em><em> of </em><em>floats</em><em> or </em><em>None</em>) – Phase mask to be used. If None, the mask in the
+PMG memory will be used if available</p></li>
+<li><p><strong>n_spots</strong> (<em>int</em>) – Maximal number of spots to load.</p></li>
+<li><p><strong>intensity_threshold</strong> (<em>float</em>) – Minimal intensity that should be in the image for
+a spot to be loaded.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.readHologram">
+<span class="sig-name descname"><span class="pre">readHologram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hologram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_spots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.readHologram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.readHologram" title="Link to this definition"></a></dt>
+<dd><p>Reads the spots from the given hologram.</p>
+<p>Computes using the current illumination pattern a predicted
+intensity and takes the top n_spots spots out of this. If
+these are bigger than a set threshold, the function extracts
+all values from the calculation  and returns these.</p>
+<p>This detection leaves the spots unsorted, so one needs to resort
+afterwards. We do that here from low to high values in the
+unrolled coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hologram</strong> (<em>np.array</em><em> of </em><em>floats</em><em> or </em><em>None</em>) – Phase mask to be used. If None, the mask in the
+PMG memory will be used if available</p></li>
+<li><p><strong>n_spots</strong> (<em>int</em>) – Maximal number of spots to load.</p></li>
+<li><p><strong>intensity_threshold</strong> (<em>float</em>) – Minimal intensity that should be in the image for
+a spot to be loaded.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>return_spots</strong> – Array like spots containing the detected spots.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savepath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.save" title="Link to this definition"></a></dt>
+<dd><p>Converts the hologram to 8bit and saves it to savepath.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>savepath</strong> (<em>string</em>) – String where to save the hologram.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyslmsorting.PhaseMaskGenerator.sortSpots">
+<span class="sig-name descname"><span class="pre">sortSpots</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#PhaseMaskGenerator.sortSpots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.PhaseMaskGenerator.sortSpots" title="Link to this definition"></a></dt>
+<dd><p>Sorts the spots from low to high coordinates.</p>
+<p>This implementation is quite stupid in complexity, but N is
+usually quite small (max ~1000).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyslmsorting.roll">
+<span class="sig-prename descclassname"><span class="pre">pyslmsorting.</span></span><span class="sig-name descname"><span class="pre">roll</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#roll"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.roll" title="Link to this definition"></a></dt>
+<dd><p>Moves a spot coordinate to the rim of the coordinates.</p>
+<p>Acts as an FFTShift in coordinate space.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyslmsorting.unroll">
+<span class="sig-prename descclassname"><span class="pre">pyslmsorting.</span></span><span class="sig-name descname"><span class="pre">unroll</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyslmsorting.html#unroll"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyslmsorting.unroll" title="Link to this definition"></a></dt>
+<dd><p>The inverse of roll().</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="Python" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="kernels.html" class="btn btn-neutral float-right" title="Kernels" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Ivo Knottnerus.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

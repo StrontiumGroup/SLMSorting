@@ -1,0 +1,10 @@
+pySLMSorting package
+==========================
+
+Examples
+---------------
+
+.. automodule:: Example
+   :members:
+   :undoc-members:
+   :show-inheritance:
